@@ -174,7 +174,7 @@ strings for further details.
 #### The `result` method: For declaring what parts of an evaluation goes into the history 
 
 ```julia
-MLJ.result(tuning::MyTuningStrategy, history, e)
+MLJBase.result(tuning::MyTuningStrategy, history, e)
 ```
 
 This method is for extracting from an evaluation `e` of some model `m`
@@ -182,7 +182,7 @@ the value of `r` to be recorded in the corresponding tuple `(m, r)` of
 the history. The fallback is
 
 ```julia
-MLJ.result(tuning, history, e) = (measure=e.measure, measurement=e.measurement)
+MLJBase.result(tuning, history, e) = (measure=e.measure, measurement=e.measurement)
 ```
 
 Note this is generally a tuple of *vectors*, since multiple measures
@@ -198,7 +198,7 @@ detailed below.
 #### The `setup` method: To initialize state 
 
 ```julia
-state = MLJ.setup(tuning::MyTuningStrategy, model, range)
+state = setup(tuning::MyTuningStrategy, model, range)
 ```
 
 The `setup` function is for initializing the mutable `state` of the
@@ -222,15 +222,15 @@ A tuning strategy must implement a `setup` method for each range
 type it is going to support:
 
 ```julia 
-setup(tuning::MyTuningStrategy, model, range::RangeType1) 
-setup(tuning::MyTuningStrategy, model, range::RangeType2) ... 
+MLJBase.setup(tuning::MyTuningStrategy, model, range::RangeType1) 
+MLJBase.setup(tuning::MyTuningStrategy, model, range::RangeType2) ... 
 ```
 
 
 #### The `models!` method: For generating model batches to evaluate
 
 ```julia
-models!(tuning::MyTuningStrategy, history, state)
+MLJBase.models!(tuning::MyTuningStrategy, history, state)
 ```
 
 This is the core method of a new implementation. Given the existing
@@ -265,7 +265,7 @@ vector.
 #### The `best` method: To define what constitutes the "optimal model"
 
 ```julia
-MLJ.best(tuning::MyTuningStrategy, history)
+MLJBase.best(tuning::MyTuningStrategy, history)
 ```
 
 Returns the best model instance, which will be `m` for some pair `(m,
@@ -277,7 +277,7 @@ fallback for `best`, the best model is the one optimizing performance
 estimates for the first measure in the `TunedModel` field `measure`:
 
 ```julia
-function MLJ.best(tuning, history)
+function MLJBase.best(tuning, history)
    measurements = [h[2].measurement[1] for h in history]
    measure = history[1].measure[1]
    if orientation(measure) == :score
@@ -304,8 +304,42 @@ method the implementer may overload. It should return a named
 tuple. The fallback is to return the raw history:
 
 ```julia
-MLJ.tuning_report(tuning, history) = (history=history,)
+MLJBase.tuning_report(tuning, history) = (history=history,)
 ```
+
+
+## Example: `ExplicitSearch`
+
+The most rudimentary tuning strategy just evaluates every model in a
+specified list, such lists constituting the only kind of supported
+range. In this special case the prototype is simply ignored. The
+fallback implementations for `result`, `best` and `report_history`
+suffice.  Here's the complete implementation:
+
+```julia 
+    
+import MLJBase
+    
+mutable struct ExplicitSearch <: MLJBase.TuningStrategy 
+    shuffle::Bool=false,
+    rng::Union{Int,AbstractRNG}=Random.GLOBAL_RNG)
+end
+
+function ExplicitSearch(; 
+    shuffle::Bool=false,
+    rng::Union{Int,AbstractRNG}=Random.GLOBAL_RNG)
+    return ExplicitSearch(shuffle, rng)
+end
+
+# the initial state is just the provided range (list of models):
+MLJBase.setup(tuning::ExplicitSearch, model, range::Vector{<:Supervised}) =
+    range
+
+# models! returns all models in the range at once:
+MLJBase.models!(tuning::MyTuningStrategy, history, state) = state 
+
+```
+
 
 ## The generic tuning algorithm
 
