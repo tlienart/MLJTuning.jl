@@ -36,10 +36,11 @@ begin, on the basis of the specific strategy and a user-specified
 
 - Recall that in MLJ a *model* is an object storing the
   hyperparameters of some learning algorithm indicated the model type
-  name. Models do not store learned parameters.
+  name (e.g., `DecisionTreeRegressor`). Models do not store learned
+  parameters.
 
 - An *evaluation* is the value returned by some call to the
-  `evaluate!` method, when passes the resampling strategy and
+  `evaluate!` method, when passed the resampling strategy and
   performance measures specified by the user when specifying the
   tuning task. Recall that such a value is a named tuple of vectors
   with keys `measure`, `measurement`, `per_fold`, and
