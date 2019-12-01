@@ -228,6 +228,11 @@ The only fallback for `setup` provided by MLJ is one that reduces
 one-dimensional `ParamRange` objects to the vector (i.e., Cartesian)
 case:
 
+```julia
+MLJBase.setup(tuning::TuningStrategy, model, range::ParamRange) =
+  [range, ]
+```
+
 A tuning strategy must implement a `setup` method for each range
 type it is going to support:
 
