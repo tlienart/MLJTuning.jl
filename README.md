@@ -17,7 +17,7 @@ All tuning in MLJ is conceptualized as an iterative procedure, each
 iteration corresponding to a performance *evaluation* of a single
 *model* instance. Each such instance is a mutation of a fixed
 *prototype*. In the general case, this prototype is a composite model,
-i.e., a model with other models as hyperparameters, and the types
+i.e., a model with other models as hyperparameters, and the parameters
 these sub-models are allowed to change.
 
 When all iterations of the algorithm are complete, the optimal model
@@ -39,7 +39,6 @@ begin, on the basis of the specific strategy and a user-specified
   hyperparameters of some learning algorithm indicated the model type
   name (e.g., `DecisionTreeRegressor`). Models do not store learned
   parameters.
-
 - An *evaluation* is the value returned by some call to the
   `evaluate!` method, when passed the resampling strategy and
   performance measures specified by the user when specifying the
@@ -50,7 +49,7 @@ begin, on the basis of the specific strategy and a user-specified
   for details. Recall also that some measures in MLJ (e.g.,
   `cross_entropy`) report a loss (or score) for each provided
   observation, while others (e.g., `auc`) report only an aggregated
-  value. This and other behaviour os governed by trait functions. Do
+  value. This and other behaviour can be inspected via trait functions. Do
   `info(rms)` to view the traits of the `rms` loss, and see
   [Performance
   measures](https://alan-turing-institute.github.io/MLJ.jl/dev/performance_measures/)
@@ -94,23 +93,17 @@ setting up a tuning task, the user constructs an instance of the
 `TunedModel` wrapper type, which has these principal fields:
 
 - `model`: the prototype model instance mutated during tuning
-
 - `tuning`: the tuning strategy, an instance of a concrete
   `TuningStrategy` subtype, such as `Grid`
-
 - `resampling`: the resampling strategy used for performance
   evaluations, an instance of a concrete `ResamplingStrategy` subtype,
   such as `Holdout` or `CV`
-
 - `measure`: a measure (loss or score) or vector of measures available
   to the tuning algorithm, the first of which is optimized in the
   common case of single-objective tuning strategies
-  
 - `range`: as defined above - roughly, the space of models to be searched
-
 - `n`: the number of iterations (number of distinct models to be
   evaluated)
-  
 - `acceleration`: the computational resources to be applied (e.g.,
   `CPUProcesses()` for distributed computing and `CPUThreads()` for
   multithreaded processing)
@@ -123,17 +116,12 @@ setting up a tuning task, the user constructs an instance of the
 Five functions are part of the tuning strategy API: 
 
 - `setup`: for initialization of state (compulsory)
-
 - `result`: for building each element of the history 
-
 - `models!`: for generating batches of new models and updating the
-  state (*Note:* The history is updated automatically) (compulsory)
-
+  state (*Note:* the history is updated automatically) (compulsory)
 - `best`: for extracting the optimal model from the history 
-
 - `tuning_report`: for selecting what to report to the user apart from
   the optimal model 
-
 
 These are outlined below, after discussing types.
 
@@ -153,7 +141,6 @@ defaults. Here's an example:
 mutable struct Grid <: TuningStrategy
     resolution::Int
     acceleration::ComputationalResources.AbstractResource
-
 end
 
 # Constructor with keywords
@@ -172,7 +159,6 @@ out-of-the-box:
 
 - The one-dimensional range types `NumericRange` and `OrdinalRange`
   (subtypes of `ParamRange`)
-
 - `Vector{ParamRange}` for Cartesian products
   
 Recall that `OrdinalRange` has a `values` field, while `NominalRange`
@@ -377,7 +363,7 @@ function update_history!(tuning, history, n, resampling_machine, state)
 		    models = [models_, ]
         end
         Δhistory = []
-        # batch processing (TODO: parallize this!):
+        # batch processing (TODO: parallelize this!):
         for m in models
             resampling_machine.model = m
             fit!(resampling_machine)
